@@ -1,133 +1,229 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
-import { radiusToDegree } from "./mathHelpers.ts";
-
-type Point = [number, number];
-
-// const path1 = ["-100, 0", "-250, 75", "-275, 150", "-280, 200", "-200, 225"];
-// const path1 = "-100 0, -250 75, -275 150, -280 200, -200 225";
-const path1 =
-  "-100 0, -250 75, -275 150, -280 200, -200 250, 200 120, 250 120, 280 50, 250 -30, 100 -180, -50 -210, -200 -180, -300 -130, -400 -50, -420 50, -400 130, -380 150, -300 160, -275 150";
-
-let qPath = "";
-const points = path1.split(", ");
-points.forEach((p, i) => {
-  if (!points[i + 1]) {
-    return;
-  }
-  const nextPoint = points[i + 1].split(" ").map((n) => parseInt(n));
-  const controlPoint = p.split(" ").map((n) => parseInt(n));
-  const dx = nextPoint[0] - controlPoint[0];
-  const dy = nextPoint[1] - controlPoint[1];
-
-  const endPoint = points[i + 2]
-    ? [controlPoint[0] + dx / 2, controlPoint[1] + dy / 2]
-    : nextPoint;
-
-  // qPath += `${controlPoint.join(" ")}, ${endPointX} ${endPointY}, `;
-  qPath += `${controlPoint.join(" ")}, ${endPoint.join(" ")}, `;
-});
-
-// console.log("qPath");
-// console.log(path1);
-// console.log(qPath);
+import { useData } from "./store.ts";
+import { Path, Point } from "./types.ts";
+import { Save } from "./Save.tsx";
 
 function App() {
+  const [pathType, setPathType] = useState("L");
+  const [dragIndex, setDragIndex] = useState<number>();
+  const [mouseOverIndex, setMouseOverIndex] = useState<number>();
+  const [editMode, setEditMode] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>();
+  const [pathConnected, setPathConnected] = useState(false);
+
+  const { path, setPath } = useData();
+
+  useEffect(() => {
+    function keyDownHandler(e: KeyboardEvent) {
+      if (e.key === "e") {
+        setEditMode(true);
+      }
+    }
+    function keyUpHandler(e: KeyboardEvent) {
+      if (e.key === "e") {
+        setEditMode(false);
+      }
+    }
+    function keyPressHandler(e: KeyboardEvent) {
+      if (e.key === "Delete" && selectedIndex !== undefined) {
+        const newPath = path.filter((_, i) => i !== selectedIndex);
+        setPath(newPath);
+      }
+    }
+
+    globalThis.addEventListener("keypress", keyPressHandler);
+    globalThis.addEventListener("keydown", keyDownHandler);
+    globalThis.addEventListener("keyup", keyUpHandler);
+
+    return () => {
+      globalThis.removeEventListener("keypress", keyPressHandler);
+      globalThis.removeEventListener("keydown", keyDownHandler);
+      globalThis.removeEventListener("keyup", keyUpHandler);
+    };
+  }, [selectedIndex]);
+
+  const [m, ...lPath] = path;
+
+  const finalPath = pathType === "L" ? lPath : fromLtoQ(lPath);
+
+  const dragPoint = path[dragIndex ?? -1];
+  const selectedPoint = path[selectedIndex ?? -1];
+
   return (
-    <svg
-      width="1000"
-      height="1000"
-      style={{ border: "1px solid black" }}
-      viewBox="-500 -500 1000 1000"
-    >
-      <path
-        stroke="#333333"
-        // d={`M 0 0 L -100 0 -200 50 -250 75 -275 150 -280 200 -200 225`}
-        // d={`M 0 0 L -100 0, -250 75, -275 150, -280 200, -200 225`}
-        // d={`M 0 0 Q -100 0, -175 37.5, -250 75, -262.5 112.5, -275 150, -277.5 175, -280 200, -240 212.5, -200 225`}
-        d={`M 0 0 Q ${qPath}`}
-        fill="none"
-      />
-    </svg>
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "10px",
+        }}
+      >
+        <div>
+          <input
+            type="radio"
+            id="L"
+            name="dType"
+            value="L"
+            checked={pathType === "L"}
+            onChange={(e) => setPathType(e.target.value)}
+          />
+          <label htmlFor="L">L</label>
+          <input
+            type="radio"
+            id="Q"
+            name="dType"
+            value="Q"
+            checked={pathType === "Q"}
+            onChange={(e) => setPathType(e.target.value)}
+          />
+          <label htmlFor="Q">Q</label>
+        </div>
+        <div>
+          <input
+            id="pathConnected"
+            type="checkbox"
+            checked={pathConnected}
+            onChange={() => setPathConnected(!pathConnected)}
+          />
+          <label htmlFor="pathConnected">Path connected</label>
+        </div>
+        <Save />
+      </div>
+
+      <svg
+        width="1000"
+        height="900"
+        style={{ border: "1px solid black" }}
+        viewBox="-500 -450 1000 900"
+        onMouseUp={() => {
+          if (dragIndex !== undefined) {
+            if (mouseOverIndex === 0) {
+              // setPathConnected(true);
+            } else {
+              selectedIndex === dragIndex
+                ? setSelectedIndex(undefined)
+                : setSelectedIndex(dragIndex);
+            }
+            setDragIndex(undefined);
+          }
+        }}
+        onMouseMove={(e) => {
+          if (dragIndex === undefined) {
+            return;
+          }
+
+          const newEPath = [...path];
+          const point = newEPath[dragIndex];
+          const newPoint: Point = [
+            point[0] + e.movementX,
+            point[1] + e.movementY,
+          ];
+
+          newEPath[dragIndex] = newPoint;
+
+          setPath(newEPath);
+        }}
+      >
+        <path
+          stroke="#333333"
+          d={`M ${m} ${pathType} ${finalPath} ${pathConnected ? "Z" : ""}`}
+          fill="transparent"
+        />
+        {pathType === "Q" && (editMode || dragIndex !== undefined) &&
+          (
+            <path
+              stroke="#333333"
+              d={`M ${m} L ${lPath}`}
+              fill="none"
+              strokeDasharray={4}
+            />
+          )}
+        {dragPoint && (
+          <circle
+            cx={dragPoint[0]}
+            cy={dragPoint[1]}
+            r={20}
+            fill="none"
+            stroke="red"
+            strokeWidth={5}
+            // onMouseUp={() => {
+            //   dragIndex === selectedIndex
+            //     ? setSelectedIndex(undefined)
+            //     : setSelectedIndex(dragIndex);
+            // }}
+          />
+        )}
+        {selectedPoint && (
+          <circle
+            cx={selectedPoint[0]}
+            cy={selectedPoint[1]}
+            r={20}
+            fill="none"
+            stroke="red"
+            strokeWidth={5}
+          />
+        )}
+        {path.map((p, i) => (
+          <circle
+            key={i}
+            cx={p[0]}
+            cy={p[1]}
+            r={20}
+            fill={(dragIndex === i) ? "none" : "transparent"}
+            stroke={(editMode || mouseOverIndex === i)
+              ? "black"
+              : "transparent"}
+            style={{
+              cursor: "pointer",
+            }}
+            onMouseDown={() => {
+              setDragIndex(i);
+              setMouseOverIndex(undefined);
+            }}
+            onMouseOver={() => {
+              setMouseOverIndex(i);
+            }}
+            onMouseOut={() => {
+              setMouseOverIndex(undefined);
+            }}
+            // onClick={() => {
+            //   console.log("onClick", i);
+            //   i === selectedIndex
+            //     ? setSelectedIndex(undefined)
+            //     : setSelectedIndex(i);
+            // }}
+          />
+        ))}
+      </svg>
+    </div>
   );
 }
 
 export default App;
 
-function Q(p1: Point, p2: Point) {
-  return `Q ${p1} ${p2}`;
-}
+function fromLtoQ(lPath: Path) {
+  const qPath: Path = [];
+  for (let i = 0; i < lPath.length - 1; i++) {
+    const controlPoint = lPath[i];
+    const nextPoint = lPath[i + 1];
+    qPath.push(controlPoint);
 
-function pointToString(point: Point) {
-  return point.join(" ");
-}
+    if (!lPath[i + 2]) {
+      qPath.push(nextPoint);
+      continue;
+    }
 
-interface QuadraticBezierCurveProps {
-  start: Point;
-  end: Point;
-  // curve: number;
-  curve: Point;
-}
+    const dx = nextPoint[0] - controlPoint[0];
+    const dy = nextPoint[1] - controlPoint[1];
 
-function QuadraticBezierCurve(
-  { start, end, curve }: QuadraticBezierCurveProps,
-) {
-  return (
-    <>
-      <path
-        d={`M ${pointToString(start)} Q ${pointToString(curve)} ${
-          pointToString(end)
-        }`}
-        stroke="black"
-        strokeWidth="1"
-        fill="none"
-      />
-    </>
-  );
-}
+    const endPoint: Point = [
+      controlPoint[0] + dx / 2,
+      controlPoint[1] + dy / 2,
+    ];
 
-function QuadraticBezierCurve2(
-  { start, end, curve }: QuadraticBezierCurveProps,
-) {
-  const a = (end[0] - start[0]) / 2;
-  const b = (end[1] - start[1]) / 2;
+    qPath.push(endPoint);
+  }
 
-  // console.log(a, b);
-
-  const beta = Math.abs(Math.atan(b / a));
-  const alpha = (Math.PI / 2) - beta;
-
-  // console.log(radiusToDegree(beta));
-  // console.log(radiusToDegree(alpha));
-
-  // const centerPoint: Point = [start[0] + a, start[1] + b];
-  const centerPointX = start[0] + a, centerPointY = start[1] + b;
-  const controlPointX = start[0] + a * Math.cos(beta),
-    controlPointY = start[1] + a * Math.sin(alpha);
-
-  console.log(controlPointX, controlPointY);
-
-  return (
-    <>
-      <path
-        d={`M ${pointToString(start)} Q 300 50 ${pointToString(end)}`}
-        stroke="#fa3838"
-        strokeWidth="20"
-        fill="none"
-      />
-      <circle cx={centerPointX} cy={centerPointY} r={10} />
-      <circle cx={controlPointX} cy={controlPointY} r={10} />
-    </>
-  );
-}
-
-function CubicBezierCurve() {
-  return (
-    <path
-      d="M 100 350 C 70 100 380 100 350 350"
-      stroke="#fa3838"
-      strokeWidth="20"
-      fill="none"
-    />
-  );
+  return qPath;
 }

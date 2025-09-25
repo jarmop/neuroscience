@@ -21,12 +21,15 @@
     "npm:@deno/vite-plugin@^1.0.4": "1.0.4_vite@6.3.2__picomatch@4.0.2",
     "npm:@types/react@^19.1.2": "19.1.2",
     "npm:@vitejs/plugin-react@^4.4.1": "4.4.1_vite@6.3.2__picomatch@4.0.2_@babel+core@7.26.10",
+    "npm:idb-keyval@^6.2.2": "6.2.2",
+    "npm:lodash@^4.17.21": "4.17.21",
     "npm:path-to-regexp@^6.3.0": "6.3.0",
     "npm:react-dom@^19.1.0": "19.1.0_react@19.1.0",
     "npm:react-router-dom@^7.5.1": "7.5.1_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:react@^19.1.0": "19.1.0",
     "npm:vite@*": "6.3.2_picomatch@4.0.2",
-    "npm:vite@^6.3.2": "6.3.2_picomatch@4.0.2"
+    "npm:vite@^6.3.2": "6.3.2_picomatch@4.0.2",
+    "npm:zustand@^5.0.8": "5.0.8_@types+react@19.1.2_react@19.1.0"
   },
   "jsr": {
     "@oak/commons@1.0.0": {
@@ -638,6 +641,9 @@
     "globals@11.12.0": {
       "integrity": "sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA=="
     },
+    "idb-keyval@6.2.2": {
+      "integrity": "sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg=="
+    },
     "js-tokens@4.0.0": {
       "integrity": "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ=="
     },
@@ -648,6 +654,9 @@
     "json5@2.2.3": {
       "integrity": "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==",
       "bin": true
+    },
+    "lodash@4.17.21": {
+      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
     },
     "lru-cache@5.1.1": {
       "integrity": "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==",
@@ -795,6 +804,17 @@
     },
     "yallist@3.1.1": {
       "integrity": "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="
+    },
+    "zustand@5.0.8_@types+react@19.1.2_react@19.1.0": {
+      "integrity": "sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==",
+      "dependencies": [
+        "@types/react",
+        "react"
+      ],
+      "optionalPeers": [
+        "@types/react",
+        "react"
+      ]
     }
   },
   "workspace": {
@@ -804,10 +824,13 @@
       "npm:@deno/vite-plugin@^1.0.4",
       "npm:@types/react@^19.1.2",
       "npm:@vitejs/plugin-react@^4.4.1",
+      "npm:idb-keyval@^6.2.2",
+      "npm:lodash@^4.17.21",
       "npm:react-dom@^19.1.0",
       "npm:react-router-dom@^7.5.1",
       "npm:react@^19.1.0",
-      "npm:vite@^6.3.2"
+      "npm:vite@^6.3.2",
+      "npm:zustand@^5.0.8"
     ]
   }
 }
